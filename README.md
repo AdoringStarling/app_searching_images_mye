@@ -19,11 +19,8 @@ npm --version
 Si no está instalado, descargar desde [https://nodejs.org](https://nodejs.org)
 
 ### 2. Navegar al directorio del proyecto
-```bash
-cd D:\app-img-01\app
-```
 
-### 3. Instalar dependencias
+### 3. Instalar dependencias (recuerde debe estar en el directorio del proyecto)
 ```bash
 npm install
 ```
