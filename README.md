@@ -1,162 +1,160 @@
 # SIAVRA - MME
 
 ## Descripción
-Sistema de Información Climática del MME. Permite filtrar y buscar entre 1,064+ imágenes con filtros inteligentes en cascada.
 
-## Requisitos del Sistema
-- **Node.js** versión 18.0 o superior
-- **npm** (incluido con Node.js) o **yarn**
-- **Navegador web** moderno (Chrome, Firefox, Safari, Edge)
+Herramienta de búsqueda y visualización de imágenes de análisis territorial climático del proyecto **SIAVRA-MME** (Sistema de Análisis de Vulnerabilidad y Riesgo Adaptativo - Ministerio de Minas y Energía). Permite explorar más de 500 imágenes estandarizadas con un sistema de filtros en cascada.
 
-## Instalación Paso a Paso
+## Requisitos
 
-### 1. Verificar Node.js
-Abrir terminal/consola y verificar que Node.js esté instalado:
+- **Node.js** versión 18.0 o superior ([descargar](https://nodejs.org))
+- **npm** (incluido con Node.js)
+- Navegador web moderno (Chrome, Firefox, Safari, Edge)
+
+## Instalación
+
+### 1. Clonar o descargar el repositorio
+
 ```bash
-node --version
-npm --version
+git clone <url-del-repositorio>
+cd app
 ```
-Si no está instalado, descargar desde [https://nodejs.org](https://nodejs.org)
 
-### 2. Navegar al directorio del proyecto
+### 2. Instalar dependencias
 
-### 3. Instalar dependencias (recuerde debe estar en el directorio del proyecto)
 ```bash
 npm install
 ```
-Este comando instala todas las librerías necesarias (Next.js, React, TypeScript, etc.)
 
-### 4. Verificar archivos de datos
-Asegurar que existan estos archivos:
-- `public/data/inventario_imagenes.csv` - Base de datos de imágenes
-- `public/images/` - Carpeta con las imágenes (525+ archivos JPG)
+### 3. Verificar archivos de datos
 
-## Comandos para Ejecutar
+Asegurar que existan:
 
-### Modo Desarrollo (Recomendado para uso diario)
+- `public/data/inv_img.csv` — Inventario de imágenes (metadatos)
+- `public/imagenes_estandarizadas/` — Carpeta con las imágenes JPG estandarizadas
+
+> Las imágenes deben tener los nombres que aparecen en la columna `nombre_unico_completo` del CSV.
+
+## Ejecución
+
+### Modo desarrollo
+
 ```bash
 npm run dev
 ```
-- La aplicación se abre en: **http://localhost:3000**
-- Se recarga automáticamente al hacer cambios
-- Para detener: `Ctrl + C` en la terminal
 
-### Modo Producción (Para despliegue)
+Abre la aplicación en **http://localhost:3000**. Se recarga automáticamente al editar el código. Detener con `Ctrl + C`.
+
+### Modo producción
+
 ```bash
 npm run build
 npm start
 ```
-- Primero compila la aplicación optimizada
-- Luego la ejecuta en modo producción
-- Más rápida pero no se recarga automáticamente
 
-## Verificar que Funciona
+Compila la aplicación optimizada y la sirve en **http://localhost:3000**.
 
-### 1. Abrir navegador
-Ir a: `http://localhost:3000`
+## Uso
 
-### 2. Probar filtros
-- Seleccionar "Escenario" → elegir "SSP245"
-- Ver que otros filtros se actualicen automáticamente
-- Hacer clic en "Consultar"
-- Verificar que aparezcan imágenes
+1. Abrir `http://localhost:3000` en el navegador.
+2. Usar los **filtros en cascada** (escenario, período, escala, etc.) para acotar la búsqueda. Al seleccionar un filtro, los filtros siguientes se ajustan automáticamente mostrando solo las opciones compatibles.
+3. Opcionalmente, escribir texto en la barra de búsqueda para filtrar por nombre de archivo o metadatos.
+4. Hacer clic en **Consultar** para ver los resultados.
+5. Hacer clic en el ícono de ojo para ver la imagen completa con su información detallada.
+6. Al limpiar un filtro (X), todos los filtros posteriores en la cascada se reinician.
 
-### 3. Probar búsqueda
-- Escribir texto como "amenaza" en el buscador
-- Hacer clic en "Consultar"
-- Ver resultados filtrados
+## Estructura del proyecto
 
-## Estructura del Proyecto
 ```
-app/
 ├── public/
 │   ├── data/
-│   │   └── inventario_imagenes.csv    # Base de datos (1,064+ registros)
-│   ├── images/                        # Imágenes físicas (525+ archivos)
-│   └── placeholder-image.svg          # Imagen por defecto
+│   │   └── inv_img.csv                    # Inventario de imágenes (metadatos)
+│   ├── imagenes_estandarizadas/           # Imágenes JPG estandarizadas (~525)
+│   ├── logos/                             # Logos institucionales
+│   └── placeholder-image.svg             # Imagen por defecto
 ├── src/
 │   ├── app/
-│   │   ├── api/                       # APIs del servidor
-│   │   └── page.tsx                   # Página principal
-│   ├── components/                    # Componentes React
-│   ├── lib/                          # Utilidades de datos
-│   └── types/                        # Tipos TypeScript
-├── package.json                       # Configuración y dependencias
-└── README.md                         # Este archivo
+│   │   ├── api/
+│   │   │   ├── filter-options/route.ts   # API: opciones de filtros en cascada
+│   │   │   └── search/route.ts           # API: búsqueda de imágenes
+│   │   ├── layout.tsx                    # Layout raíz (metadata, fuentes)
+│   │   ├── page.tsx                      # Página principal
+│   │   └── globals.css                   # Estilos globales
+│   ├── components/
+│   │   ├── FilterDropdown.tsx            # Selector desplegable reutilizable
+│   │   ├── ImageCard.tsx                 # Tarjeta de resultado (vista lista)
+│   │   ├── ImageModal.tsx                # Modal de detalle de imagen
+│   │   └── ImageSearch.tsx               # Componente principal de búsqueda
+│   ├── lib/
+│   │   ├── data-utils.ts                 # Utilidades cliente (carga de CSV, URL de imagen)
+│   │   └── server-data-utils.ts          # Utilidades servidor (lectura CSV con fs, filtrado)
+│   └── types/
+│       └── index.ts                      # Interfaces TypeScript
+├── package.json
+├── tsconfig.json
+├── next.config.ts
+└── README.md
 ```
 
-## Funcionalidades del Sistema
+## Categorías de filtros
 
-### Filtros Inteligentes en Cascada
-Los filtros se actualizan automáticamente según las selecciones:
-- **Escenario**: REFERENCIA, SSP245, SSP370
-- **Período**: 1990-2021, 2041-2060, 2081-2100, etc.
-- **Escala**: Territorial, Sectorial
-- **Sector**: Hidrocarburos, Minería, Energía
-- **Sub-Sector**: Producción, Transporte, Exploración, Generación
-- **Componente**: Biótico, Hábitat Humano, Infraestructura, Salud Humana
-- **Tipo**: AMENAZA, VULNERABILIDAD, RIESGO, SENSIBILIDAD, etc.
-- **Atributo**: Específicos por imagen
+| Filtro | Valores posibles |
+|--------|-----------------|
+| Escenario | REFERENCIA, SSP245, SSP370 |
+| Período | 1990-2021, 2041-2060, 2081-2100, etc. |
+| Escala | Territorial, Sectorial |
+| Sector | Hidrocarburos, Minería, Energía |
+| Sub-Sector | Producción, Transporte, Exploración, Generación |
+| Componente | Biotico, Habitat_Humano, Infraestructura, Salud_humana |
+| Tipo | AMENAZA, VULNERABILIDAD, RIESGO, SENSIBILIDAD, CAPACIDAD_ADAPTATIVA, INDICADOR, DELTA |
+| Atributo | Específico por imagen (o "NO ESPECIFICA") |
 
-### Búsqueda por Texto
-Busca en nombres de archivos, componentes, tipos y atributos
+## Solución de problemas
 
-### Visualización
-- **Vista Cuadrícula**: Tarjetas con imágenes
-- **Vista Lista**: Formato compacto
-- **Modal Detallado**: Información completa al hacer clic
+| Problema | Solución |
+|----------|----------|
+| `Cannot find module` | Ejecutar `npm install` de nuevo |
+| `Port 3000 already in use` | Usar `npm run dev -- -p 3001` |
+| Imágenes no se muestran | Verificar que `public/imagenes_estandarizadas/` contenga los JPG y que los nombres coincidan con `nombre_unico_completo` del CSV |
+| Filtros vacíos | Verificar que `public/data/inv_img.csv` exista y tenga el formato correcto (21 columnas) |
 
-## Solución de Problemas
+## Tecnologías
 
-### Error: "Cannot find module"
-```bash
-# Reinstalar dependencias
-rm -rf node_modules package-lock.json
-npm install
-```
+| Tecnología | Versión | Propósito |
+|-----------|---------|-----------|
+| Next.js | 16.1.6 | Framework React con App Router y API Routes |
+| React | 19.2.3 | Biblioteca de interfaz de usuario |
+| TypeScript | 5.x | Tipado estático |
+| Tailwind CSS | 4.x | Estilos utilitarios |
+| Lucide React | — | Iconografía |
 
-### Error: "Port 3000 already in use"
-```bash
-# Usar otro puerto
-npm run dev -- -p 3001
-```
+## Notas técnicas para despliegue y desarrollo
 
-### Las imágenes no se muestran
-1. Verificar que `public/images/` contenga archivos JPG
-2. Verificar que los nombres en el CSV coincidan con los archivos
-3. Revisar consola del navegador (F12) por errores
+### Arquitectura
 
-### Filtros vacíos
-1. Verificar que `public/data/inventario_imagenes.csv` exista
-2. Verificar que el CSV tenga el formato correcto (17 columnas)
-3. Revisar consola por errores de carga de datos
+La aplicación separa el código en dos capas:
 
-## Comandos Adicionales
+- **Cliente** (`data-utils.ts`): carga el CSV vía `fetch` para obtener las opciones iniciales de filtros. No utiliza módulos de Node.js (`fs`, `path`).
+- **Servidor** (`server-data-utils.ts`): lee el CSV con `fs.readFileSync` para las API Routes. Maneja la deduplicación de registros y el filtrado en cascada.
 
-```bash
-# Verificar errores de código
-npm run lint
+Esta separación es necesaria porque Next.js no permite importar módulos de Node.js en componentes de cliente.
 
-# Compilar para producción
-npm run build
+### Datos
 
-# Ver qué puertos están ocupados (Windows)
-netstat -an | findstr :3000
-```
+El inventario (`inv_img.csv`) tiene 21 columnas. Cada imagen original puede aparecer duplicada en el CSV con diferentes nombres estandarizados; la aplicación deduplica por `nombre_archivo` quedándose con la primera ocurrencia.
 
-## Soporte Técnico
+### API Routes
 
-**Tecnologías utilizadas:**
-- Next.js 16.1.6 (Framework React)
-- TypeScript (Tipado estático)  
-- Tailwind CSS (Estilos)
-- Lucide React (Iconos)
+- **POST `/api/filter-options`**: recibe los filtros activos y devuelve las opciones válidas restantes (cascada).
+- **POST `/api/search`**: recibe filtros + texto de búsqueda y devuelve los registros coincidentes.
 
-**Rendimiento:**
-- Carga bajo demanda (no procesa 1,064+ imágenes al inicio)
-- Filtros dinámicos basados en datos reales
-- Optimizado para datasets grandes
-- Responsive design para móvil/desktop
+### Consideraciones para despliegue en producción
+
+- **Imágenes**: las imágenes se sirven como archivos estáticos desde `public/imagenes_estandarizadas/`. En un entorno de producción con muchas imágenes, considerar un CDN o almacenamiento externo (S3, Azure Blob Storage) y reemplazar la función `getImageUrl()` en `data-utils.ts`.
+- **CSV vs Base de datos**: actualmente los datos se leen de un CSV en cada petición. Para mayor escala, migrar a una base de datos (PostgreSQL, SQLite) y reemplazar `loadCSVData()` en `server-data-utils.ts`.
+- **Caché**: Next.js cachea las páginas estáticas. Las API Routes son dinámicas; para mejorar rendimiento se puede implementar caché en memoria del CSV parseado.
+- **Variables de entorno**: si se migra a almacenamiento externo o base de datos, usar `.env.local` para credenciales (nunca incluir en el repositorio).
+- **Plataformas compatibles**: Vercel (despliegue directo), Docker, cualquier servidor Node.js, o exportación estática con `output: 'export'` en `next.config.ts` (requiere reemplazar las API Routes por lógica cliente).
 
 ---
-**Ministerio de Minas y Energía - Universidad Nacional de Colombia**
+
+**Universidad Nacional de Colombia — Ministerio de Minas y Energía**

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Search, Filter, Grid, List, Search as SearchIcon } from 'lucide-react';
+import { Search, Filter } from 'lucide-react';
 import { ImageMetadata, FilterOptions, SearchFilters } from '@/types';
 import FilterDropdown from './FilterDropdown';
 import ImageCard from './ImageCard';
@@ -13,7 +13,6 @@ interface ImageSearchProps {
 export default function ImageSearch({ filterOptions }: ImageSearchProps) {
   const [searchText, setSearchText] = useState('');
   const [filters, setFilters] = useState<SearchFilters>({});
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showFilters, setShowFilters] = useState(true);
   const [searchResults, setSearchResults] = useState<ImageMetadata[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -44,11 +43,23 @@ export default function ImageSearch({ filterOptions }: ImageSearchProps) {
     }
   };
 
+  // Cascade order: clearing a filter resets all filters below it
+  const filterOrder: (keyof SearchFilters)[] = [
+    'escenario', 'periodo', 'escala', 'componente', 'tipo', 'sector', 'sub_sector', 'atributo'
+  ];
+
   const handleFilterChange = async (filterType: keyof SearchFilters, value: string | undefined) => {
-    const newFilters = {
-      ...filters,
-      [filterType]: value || undefined
-    };
+    let newFilters = { ...filters, [filterType]: value || undefined };
+
+    // If clearing a filter, also clear all filters below it in the cascade
+    if (!value) {
+      const idx = filterOrder.indexOf(filterType);
+      if (idx !== -1) {
+        for (let i = idx + 1; i < filterOrder.length; i++) {
+          delete newFilters[filterOrder[i]];
+        }
+      }
+    }
     
     setFilters(newFilters);
     setIsUpdatingFilters(true);
@@ -117,7 +128,7 @@ export default function ImageSearch({ filterOptions }: ImageSearchProps) {
                 placeholder="Buscar por nombre de archivo, componente, tipo, etc..."
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
@@ -134,7 +145,7 @@ export default function ImageSearch({ filterOptions }: ImageSearchProps) {
               </>
             ) : (
               <>
-                <SearchIcon className="h-4 w-4" />
+                <Search className="h-4 w-4" />
                 Consultar
               </>
             )}
@@ -253,33 +264,15 @@ export default function ImageSearch({ filterOptions }: ImageSearchProps) {
               </p>
             </div>
             
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setViewMode('grid')}
-                className={`p-2 rounded ${viewMode === 'grid' ? 'bg-blue-100 text-blue-600' : 'text-gray-400 hover:text-gray-600'}`}
-              >
-                <Grid className="h-4 w-4" />
-              </button>
-              <button
-                onClick={() => setViewMode('list')}
-                className={`p-2 rounded ${viewMode === 'list' ? 'bg-blue-100 text-blue-600' : 'text-gray-400 hover:text-gray-600'}`}
-              >
-                <List className="h-4 w-4" />
-              </button>
-            </div>
           </div>
 
-          {/* Results Grid/List */}
+          {/* Results List */}
           {searchResults.length > 0 ? (
-            <div className={viewMode === 'grid' 
-              ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
-              : "space-y-4"
-            }>
+            <div className="space-y-4">
               {searchResults.map((image) => (
                 <ImageCard
                   key={image.id}
                   image={image}
-                  viewMode={viewMode}
                 />
               ))}
             </div>

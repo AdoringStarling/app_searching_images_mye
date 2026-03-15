@@ -31,91 +31,81 @@ function parseCSVLine(line: string): string[] {
   return result;
 }
 
-export function getInitialFilterOptions(): FilterOptions {
-  const csvPath = path.join(process.cwd(), 'public', 'data', 'inventario_imagenes.csv');
+// Parse CSV and deduplicate by nombre_archivo (each image appears twice with different standardized names)
+function loadCSVData(): ImageMetadata[] {
+  const csvPath = path.join(process.cwd(), 'public', 'data', 'inv_img.csv');
   const csvData = fs.readFileSync(csvPath, 'utf-8');
   const lines = csvData.trim().split('\n');
-  const headers = lines[0].split(',').map(h => h.trim());
-  
-  const data: ImageMetadata[] = lines.slice(1).map((line, index) => {
-    const values = parseCSVLine(line);
-    return {
-      id: (index + 1).toString(),
+
+  const seen = new Set<string>();
+  const data: ImageMetadata[] = [];
+  let id = 0;
+
+  for (let i = 1; i < lines.length; i++) {
+    const values = parseCSVLine(lines[i]);
+    const nombreArchivo = cleanValue(values[1]) || '';
+    if (seen.has(nombreArchivo)) continue;
+    seen.add(nombreArchivo);
+    id++;
+    data.push({
+      id: id.toString(),
       ruta_completa: cleanValue(values[0]) || '',
-      tema_principal: cleanValue(values[1]) || '',
-      subcarpeta_1: cleanValue(values[2]) || '',
-      subcarpeta_2: cleanValue(values[3]) || '',
-      subcarpeta_3: cleanValue(values[4]) || '',
-      subcarpeta_4: cleanValue(values[5]) || '',
-      subcarpeta_5: cleanValue(values[6]) || '',
-      nombre_archivo: cleanValue(values[7]) || '',
-      escenario: cleanValue(values[8]) || '' as any,
-      periodo: cleanValue(values[9]) || '',
-      escala: cleanValue(values[10]) || '' as any,
-      sector: cleanValue(values[11]) || '',
-      sub_sector: cleanValue(values[12]) || '',
-      componente: cleanValue(values[13]) || '' as any,
-      tipo: cleanValue(values[14]) || '' as any,
-      atributo: cleanValue(values[15]) || '',
-      diferenciador: cleanValue(values[16]) || undefined,
-    };
-  });
+      nombre_archivo: nombreArchivo,
+      nombre_unico_completo: cleanValue(values[2]) || '',
+      nombre_unico: cleanValue(values[20]) || '',
+      escenario: cleanValue(values[5]) || '' as any,
+      periodo: cleanValue(values[6]) || '',
+      escala: cleanValue(values[7]) || '' as any,
+      sector: cleanValue(values[8]) || '',
+      sub_sector: cleanValue(values[9]) || '',
+      componente: cleanValue(values[10]) || '' as any,
+      tipo: cleanValue(values[11]) || '' as any,
+      atributo: cleanValue(values[12]) || '',
+      diferenciador: cleanValue(values[13]) || undefined,
+      tema_principal: cleanValue(values[14]) || '',
+      subcarpeta_1: cleanValue(values[15]) || '',
+      subcarpeta_2: cleanValue(values[16]) || '',
+      subcarpeta_3: cleanValue(values[17]) || '',
+      subcarpeta_4: cleanValue(values[18]) || '',
+      subcarpeta_5: cleanValue(values[19]) || '',
+    });
+  }
 
-  // Extraer opciones únicas de cada campo
-  const extractUniqueOptions = (field: keyof ImageMetadata): string[] => {
-    const options = data
-      .map(item => item[field])
-      .filter((value): value is string => value !== undefined && value !== null && typeof value === 'string' && value.trim() !== '')
-      .map(value => value === 'NaN' || value === 'nan' || value === 'null' ? 'NO ESPECIFICA' : value)
-      .filter((value, index, array) => array.indexOf(value) === index)
-      .sort();
-    return options;
-  };
+  return data;
+}
 
+function extractUniqueOptions(data: ImageMetadata[], field: keyof ImageMetadata): string[] {
+  return data
+    .map(item => item[field])
+    .filter((value): value is string => value !== undefined && value !== null && typeof value === 'string' && value.trim() !== '')
+    .map(value => value === 'NaN' || value === 'nan' || value === 'null' ? 'NO ESPECIFICA' : value)
+    .filter((value, index, array) => array.indexOf(value) === index)
+    .sort();
+}
+
+function buildFilterOptions(data: ImageMetadata[]): FilterOptions {
   return {
-    escenarios: extractUniqueOptions('escenario'),
-    periodos: extractUniqueOptions('periodo'),
-    escalas: extractUniqueOptions('escala'),
-    sectores: extractUniqueOptions('sector'),
-    subSectores: extractUniqueOptions('sub_sector'),
-    componentes: extractUniqueOptions('componente'),
-    tipos: extractUniqueOptions('tipo'),
-    atributos: extractUniqueOptions('atributo'),
+    escenarios: extractUniqueOptions(data, 'escenario'),
+    periodos: extractUniqueOptions(data, 'periodo'),
+    escalas: extractUniqueOptions(data, 'escala'),
+    sectores: extractUniqueOptions(data, 'sector'),
+    subSectores: extractUniqueOptions(data, 'sub_sector'),
+    componentes: extractUniqueOptions(data, 'componente'),
+    tipos: extractUniqueOptions(data, 'tipo'),
+    atributos: extractUniqueOptions(data, 'atributo'),
   };
+}
+
+export function getInitialFilterOptions(): FilterOptions {
+  const data = loadCSVData();
+  return buildFilterOptions(data);
 }
 
 // Nueva función para obtener opciones filtradas basadas en los filtros actuales (lado servidor)
 export function getFilteredOptions(currentFilters: Partial<SearchFilters>): FilterOptions {
-  const csvPath = path.join(process.cwd(), 'public', 'data', 'inventario_imagenes.csv');
-  const csvData = fs.readFileSync(csvPath, 'utf-8');
-  const lines = csvData.trim().split('\n');
-  
-  const data: ImageMetadata[] = lines.slice(1).map((line, index) => {
-    const values = parseCSVLine(line);
-    return {
-      id: (index + 1).toString(),
-      ruta_completa: cleanValue(values[0]) || '',
-      tema_principal: cleanValue(values[1]) || '',
-      subcarpeta_1: cleanValue(values[2]) || '',
-      subcarpeta_2: cleanValue(values[3]) || '',
-      subcarpeta_3: cleanValue(values[4]) || '',
-      subcarpeta_4: cleanValue(values[5]) || '',
-      subcarpeta_5: cleanValue(values[6]) || '',
-      nombre_archivo: cleanValue(values[7]) || '',
-      escenario: cleanValue(values[8]) || '' as any,
-      periodo: cleanValue(values[9]) || '',
-      escala: cleanValue(values[10]) || '' as any,
-      sector: cleanValue(values[11]) || '',
-      sub_sector: cleanValue(values[12]) || '',
-      componente: cleanValue(values[13]) || '' as any,
-      tipo: cleanValue(values[14]) || '' as any,
-      atributo: cleanValue(values[15]) || '',
-      diferenciador: cleanValue(values[16]) || undefined,
-    };
-  });
+  const data = loadCSVData();
 
-  // Filtrar los datos basándose en los filtros actuales
-  let filteredData = data.filter(item => {
+  const filteredData = data.filter(item => {
     return (
       (!currentFilters.escenario || item.escenario === currentFilters.escenario) &&
       (!currentFilters.periodo || item.periodo === currentFilters.periodo) &&
@@ -131,57 +121,11 @@ export function getFilteredOptions(currentFilters: Partial<SearchFilters>): Filt
     );
   });
 
-  // Extraer opciones únicas de los datos filtrados
-  const extractUniqueOptions = (field: keyof ImageMetadata): string[] => {
-    const options = filteredData
-      .map(item => item[field])
-      .filter((value): value is string => value !== undefined && value !== null && typeof value === 'string' && value.trim() !== '')
-      .map(value => value === 'NaN' || value === 'nan' || value === 'null' ? 'NO ESPECIFICA' : value)
-      .filter((value, index, array) => array.indexOf(value) === index)
-      .sort();
-    return options;
-  };
-
-  return {
-    escenarios: extractUniqueOptions('escenario'),
-    periodos: extractUniqueOptions('periodo'),
-    escalas: extractUniqueOptions('escala'),
-    sectores: extractUniqueOptions('sector'),
-    subSectores: extractUniqueOptions('sub_sector'),
-    componentes: extractUniqueOptions('componente'),
-    tipos: extractUniqueOptions('tipo'),
-    atributos: extractUniqueOptions('atributo'),
-  };
+  return buildFilterOptions(filteredData);
 }
 
 export function searchImageData(searchParams: SearchFilters): ImageMetadata[] {
-  const csvPath = path.join(process.cwd(), 'public', 'data', 'inventario_imagenes.csv');
-  const csvData = fs.readFileSync(csvPath, 'utf-8');
-  const lines = csvData.trim().split('\n');
-  
-  const data: ImageMetadata[] = lines.slice(1).map((line, index) => {
-    const values = parseCSVLine(line);
-    return {
-      id: (index + 1).toString(),
-      ruta_completa: cleanValue(values[0]) || '',
-      tema_principal: cleanValue(values[1]) || '',
-      subcarpeta_1: cleanValue(values[2]) || '',
-      subcarpeta_2: cleanValue(values[3]) || '',
-      subcarpeta_3: cleanValue(values[4]) || '',
-      subcarpeta_4: cleanValue(values[5]) || '',
-      subcarpeta_5: cleanValue(values[6]) || '',
-      nombre_archivo: cleanValue(values[7]) || '',
-      escenario: cleanValue(values[8]) || '' as any,
-      periodo: cleanValue(values[9]) || '',
-      escala: cleanValue(values[10]) || '' as any,
-      sector: cleanValue(values[11]) || '',
-      sub_sector: cleanValue(values[12]) || '',
-      componente: cleanValue(values[13]) || '' as any,
-      tipo: cleanValue(values[14]) || '' as any,
-      atributo: cleanValue(values[15]) || '',
-      diferenciador: cleanValue(values[16]) || undefined,
-    };
-  });
+  const data = loadCSVData();
 
   // Apply filters
   return data.filter(item => {
@@ -190,6 +134,7 @@ export function searchImageData(searchParams: SearchFilters): ImageMetadata[] {
       const searchText = searchParams.searchText.toLowerCase();
       const searchableText = [
         item.nombre_archivo,
+        item.nombre_unico_completo,
         item.componente,
         item.tipo,
         item.atributo,

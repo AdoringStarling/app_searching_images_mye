@@ -1,9 +1,9 @@
-import { ImageMetadata, FilterOptions, SearchFilters } from '@/types';
+import { FilterOptions } from '@/types';
 
 // Load filter options from API
 export async function loadFilterOptions(): Promise<FilterOptions> {
   try {
-    const response = await fetch('/data/inventario_imagenes.csv');
+    const response = await fetch('/data/inv_img.csv');
     if (!response.ok) {
       throw new Error('Failed to load filter options');
     }
@@ -59,14 +59,9 @@ export async function loadFilterOptions(): Promise<FilterOptions> {
 }
 
 // Generate image URL for display
-export function getImageUrl(imagePath: string): string {
-  if (!imagePath) return '/placeholder-image.svg';
-  
-  // Extract filename from full path
-  const fileName = imagePath.split('\\').pop() || imagePath.split('/').pop();
+export function getImageUrl(fileName: string): string {
   if (!fileName) return '/placeholder-image.svg';
-  
-  return `/images/${fileName}`;
+  return `/imagenes_estandarizadas/${fileName}`;
 }
 
 // CSV parsing utilities

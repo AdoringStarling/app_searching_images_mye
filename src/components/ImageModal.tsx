@@ -11,12 +11,11 @@ interface ImageModalProps {
 }
 
 export default function ImageModal({ image, onClose }: ImageModalProps) {
-  const imageUrl = getImageUrl(image.ruta_completa);
+  const imageUrl = getImageUrl(image.nombre_unico_completo);
   const handleDownload = () => {
-    // Create download link - this would need to be implemented based on actual file hosting
     const link = document.createElement('a');
     link.href = imageUrl;
-    link.download = image.nombre_archivo;
+    link.download = image.nombre_unico_completo;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
